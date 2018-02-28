@@ -33,8 +33,8 @@
 
 ## 编译启动测试程序
 
-    go build cmd/cli
-    go build cmd/svr
+    go build cmd/cli/cli.go
+    go build cmd/svr/svr.go
 
     # 分别启动服务端
     ./svr -port 50001
