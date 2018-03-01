@@ -19,19 +19,20 @@ import (
 
 var (
 	serv = flag.String("service", "hello_service", "service name")
-	port = flag.Int("port", 50001, "listening port")
-	reg  = flag.String("reg", "http://127.0.0.1:2379", "register etcd address")
+	host = flag.String("host", "localhost", "listening host")
+	port = flag.String("port", "50001", "listening port")
+	reg  = flag.String("reg", "http://localhost:2379", "register etcd address")
 )
 
 func main() {
 	flag.Parse()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", *port))
+	lis, err := net.Listen("tcp", net.JoinHostPort(*host, *port))
 	if err != nil {
 		panic(err)
 	}
 
-	err = grpclb.Register(*serv, "127.0.0.1", *port, *reg, time.Second*10, 15)
+	err = grpclb.Register(*serv, *host, *port, *reg, time.Second*10, 15)
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +46,7 @@ func main() {
 		os.Exit(1)
 	}()
 
-	log.Printf("starting hello service at %d", *port)
+	log.Printf("starting hello service at %s", *port)
 	s := grpc.NewServer()
 	pb.RegisterGreeterServer(s, &server{})
 	s.Serve(lis)
@@ -57,5 +58,5 @@ type server struct{}
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	fmt.Printf("%v: Receive is %s\n", time.Now(), in.Name)
-	return &pb.HelloReply{Message: "Hello " + in.Name + fmt.Sprintf(" from %d", *port)}, nil
+	return &pb.HelloReply{Message: "Hello " + in.Name + " from " + net.JoinHostPort(*host, *port)}, nil
 }

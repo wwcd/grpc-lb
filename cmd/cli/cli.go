@@ -15,7 +15,7 @@ import (
 
 var (
 	serv = flag.String("service", "hello_service", "service name")
-	reg  = flag.String("reg", "http://127.0.0.1:2379", "register etcd address")
+	reg  = flag.String("reg", "http://localhost:2379", "register etcd address")
 )
 
 func main() {
@@ -23,8 +23,9 @@ func main() {
 	r := grpclb.NewResolver(*serv)
 	b := grpc.RoundRobin(r)
 
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	conn, err := grpc.DialContext(ctx, *reg, grpc.WithInsecure(), grpc.WithBalancer(b), grpc.WithBlock())
+	cancel()
 	if err != nil {
 		panic(err)
 	}

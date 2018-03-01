@@ -14,8 +14,8 @@ var Prefix = "etcd3_naming"
 var Deregister = make(chan struct{})
 
 // Register
-func Register(name string, host string, port int, target string, interval time.Duration, ttl int) error {
-	serviceValue := fmt.Sprintf("%s:%d", host, port)
+func Register(name, host, port string, target string, interval time.Duration, ttl int) error {
+	serviceValue := fmt.Sprintf("%s:%s", host, port)
 	serviceKey := fmt.Sprintf("/%s/%s/%s", Prefix, name, serviceValue)
 
 	// get endpoints for register dial address
