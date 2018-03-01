@@ -3,6 +3,7 @@ package etcdv3
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -15,7 +16,7 @@ var Deregister = make(chan struct{})
 
 // Register
 func Register(name, host, port string, target string, interval time.Duration, ttl int) error {
-	serviceValue := fmt.Sprintf("%s:%s", host, port)
+	serviceValue := net.JoinHostPort(host, port)
 	serviceKey := fmt.Sprintf("/%s/%s/%s", Prefix, name, serviceValue)
 
 	// get endpoints for register dial address
