@@ -3,7 +3,7 @@
 [gRPC服务发现&负载均衡](https://segmentfault.com/a/1190000008672912)中的例子, 修订如下问题
 
 - register中重复PUT, watch时没有释放导致的内存泄漏
-- 不能正常unregister
+- 退出时不能正常unregister
 
 # 测试
 
@@ -31,15 +31,12 @@
 	  --advertise-client-urls http://${NODE1}:2379 --listen-client-urls http://0.0.0.0:2379 \
 	  --initial-cluster node1=http://${NODE1}:2380
 
-## 编译启动测试程序
-
-    go build cmd/cli/cli.go
-    go build cmd/svr/svr.go
+## 启动测试程序
 
     # 分别启动服务端
-    ./svr -port 50001
-    ./svr -port 50002
-    ./svr -port 50003
+    go run cmd/svr/svr.go - port 50001
+    go run cmd/svr/svr.go - port 50002
+    go run cmd/svr/svr.go - port 50003
 
     # 启动客户端
-    ./cli
+    go run cmd/cli/cli.go
