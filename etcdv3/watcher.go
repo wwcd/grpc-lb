@@ -45,7 +45,7 @@ func (w *watcher) Next() ([]*naming.Update, error) {
 
 	// generate etcd Watcher
 	ctx, cancel := context.WithCancel(context.Background())
-	rch := w.client.Watch(ctx, prefix, etcd3.WithPrefix())
+	rch := w.client.Watch(ctx, prefix, etcd3.WithPrefix(), etcd3.WithPrevKV())
 	defer cancel()
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
@@ -53,7 +53,7 @@ func (w *watcher) Next() ([]*naming.Update, error) {
 			case mvccpb.PUT:
 				return []*naming.Update{{Op: naming.Add, Addr: string(ev.Kv.Value)}}, nil
 			case mvccpb.DELETE:
-				return []*naming.Update{{Op: naming.Delete, Addr: string(ev.Kv.Value)}}, nil
+				return []*naming.Update{{Op: naming.Delete, Addr: string(ev.PrevKv.Value)}}, nil
 			}
 		}
 	}

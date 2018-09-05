@@ -30,7 +30,7 @@ func main() {
 		panic(err)
 	}
 
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Millisecond)
 	for t := range ticker.C {
 		client := pb.NewGreeterClient(conn)
 		resp, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "world " + strconv.Itoa(t.Second())})
