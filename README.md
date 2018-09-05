@@ -7,6 +7,7 @@
 
 - register中重复PUT, watch时没有释放导致的内存泄漏
 - 退出时不能正常unregister
+- 接收到etcd的delete事件时，未删除数据#1
 
 # 测试
 
