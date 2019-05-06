@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -13,6 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/sirupsen/logrus"
 	pb "github.com/wwcd/grpc-lb/cmd/helloworld"
 	grpclb "github.com/wwcd/grpc-lb/etcdv3"
 )
@@ -32,7 +31,7 @@ func main() {
 		panic(err)
 	}
 
-	err = grpclb.Register(*serv, *host, *port, *reg, time.Second*10, 15)
+	err = grpclb.Register(*reg, *serv, *host, *port, time.Second*10, 15)
 	if err != nil {
 		panic(err)
 	}
@@ -41,12 +40,12 @@ func main() {
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGQUIT)
 	go func() {
 		s := <-ch
-		log.Printf("receive signal '%v'", s)
+		logrus.Infof("receive signal '%v'", s)
 		grpclb.UnRegister()
 		os.Exit(1)
 	}()
 
-	log.Printf("starting hello service at %s", *port)
+	logrus.Infof("starting hello service at %s", *port)
 	s := grpc.NewServer()
 	pb.RegisterGreeterServer(s, &server{})
 	s.Serve(lis)
@@ -57,6 +56,6 @@ type server struct{}
 
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	fmt.Printf("%v: Receive is %s\n", time.Now(), in.Name)
+	logrus.Infof("%v: Receive is %s\n", time.Now(), in.Name)
 	return &pb.HelloReply{Message: "Hello " + in.Name + " from " + net.JoinHostPort(*host, *port)}, nil
 }

@@ -3,28 +3,32 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"strconv"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/balancer/roundrobin"
+	"google.golang.org/grpc/resolver"
 
+	"github.com/sirupsen/logrus"
 	pb "github.com/wwcd/grpc-lb/cmd/helloworld"
 	grpclb "github.com/wwcd/grpc-lb/etcdv3"
 )
 
 var (
-	serv = flag.String("service", "hello_service", "service name")
-	reg  = flag.String("reg", "http://localhost:2379", "register etcd address")
+	svc = flag.String("service", "hello_service", "service name")
+	reg = flag.String("reg", "http://localhost:2379", "register etcd address")
 )
 
 func main() {
 	flag.Parse()
-	r := grpclb.NewResolver(*serv)
-	b := grpc.RoundRobin(r)
+	r := grpclb.NewResolver(*reg, *svc)
+	resolver.Register(r)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	conn, err := grpc.DialContext(ctx, *reg, grpc.WithInsecure(), grpc.WithBalancer(b), grpc.WithBlock())
+	// https://github.com/grpc/grpc/blob/master/doc/naming.md
+	// The gRPC client library will use the specified scheme to pick the right resolver plugin and pass it the fully qualified name string.
+	conn, err := grpc.DialContext(ctx, r.Scheme()+"://authority/"+*svc, grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name), grpc.WithBlock())
 	cancel()
 	if err != nil {
 		panic(err)
@@ -35,7 +39,7 @@ func main() {
 		client := pb.NewGreeterClient(conn)
 		resp, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "world " + strconv.Itoa(t.Second())})
 		if err == nil {
-			fmt.Printf("%v: Reply is %s\n", t, resp.Message)
+			logrus.Infof("%v: Reply is %s\n", t, resp.Message)
 		}
 	}
 }

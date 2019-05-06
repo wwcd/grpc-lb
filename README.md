@@ -8,6 +8,7 @@
 - register中重复PUT, watch时没有释放导致的内存泄漏
 - 退出时不能正常unregister
 - 接收到etcd的delete事件时，未删除数据[#1](https://github.com/wwcd/grpc-lb/issues/1)
+- 使用resolver包替换naming包，此包状态已变为Deprecated
 
 # 测试
 
@@ -37,10 +38,12 @@
 
 ## 启动测试程序
 
+    *注: golang1.11以上版本进行测试*
+
     # 分别启动服务端
-    go run cmd/svr/svr.go - port 50001
-    go run cmd/svr/svr.go - port 50002
-    go run cmd/svr/svr.go - port 50003
+    go run -mod vendor cmd/svr/svr.go -port 50001
+    go run -mod vendor cmd/svr/svr.go -port 50002
+    go run -mod vendor cmd/svr/svr.go -port 50003
 
     # 启动客户端
-    go run cmd/cli/cli.go
+    go run -mod vendor cmd/cli/cli.go

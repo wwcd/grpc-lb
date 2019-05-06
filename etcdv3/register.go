@@ -7,43 +7,42 @@ import (
 	"strings"
 	"time"
 
-	etcd3 "github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3"
 )
 
 // Prefix should start and end with no slash
-var Prefix = "etcd3_naming"
 var Deregister = make(chan struct{})
 
 // Register
-func Register(name, host, port string, target string, interval time.Duration, ttl int) error {
+func Register(target, service, host, port string, interval time.Duration, ttl int) error {
 	serviceValue := net.JoinHostPort(host, port)
-	serviceKey := fmt.Sprintf("/%s/%s/%s", Prefix, name, serviceValue)
+	serviceKey := fmt.Sprintf("/%s/%s/%s", schema, service, serviceValue)
 
 	// get endpoints for register dial address
 	var err error
-	client, err := etcd3.New(etcd3.Config{
+	cli, err := clientv3.New(clientv3.Config{
 		Endpoints: strings.Split(target, ","),
 	})
 	if err != nil {
-		return fmt.Errorf("grpclb: create etcd3 client failed: %v", err)
+		return fmt.Errorf("grpclb: create clientv3 client failed: %v", err)
 	}
-	resp, err := client.Grant(context.TODO(), int64(ttl))
+	resp, err := cli.Grant(context.TODO(), int64(ttl))
 	if err != nil {
-		return fmt.Errorf("grpclb: create etcd3 lease failed: %v", err)
+		return fmt.Errorf("grpclb: create clientv3 lease failed: %v", err)
 	}
 
-	if _, err := client.Put(context.TODO(), serviceKey, serviceValue, etcd3.WithLease(resp.ID)); err != nil {
-		return fmt.Errorf("grpclb: set service '%s' with ttl to etcd3 failed: %s", name, err.Error())
+	if _, err := cli.Put(context.TODO(), serviceKey, serviceValue, clientv3.WithLease(resp.ID)); err != nil {
+		return fmt.Errorf("grpclb: set service '%s' with ttl to clientv3 failed: %s", service, err.Error())
 	}
 
-	if _, err := client.KeepAlive(context.TODO(), resp.ID); err != nil {
-		return fmt.Errorf("grpclb: refresh service '%s' with ttl to etcd3 failed: %s", name, err.Error())
+	if _, err := cli.KeepAlive(context.TODO(), resp.ID); err != nil {
+		return fmt.Errorf("grpclb: refresh service '%s' with ttl to clientv3 failed: %s", service, err.Error())
 	}
 
 	// wait deregister then delete
 	go func() {
 		<-Deregister
-		client.Delete(context.Background(), serviceKey)
+		cli.Delete(context.Background(), serviceKey)
 		Deregister <- struct{}{}
 	}()
 
