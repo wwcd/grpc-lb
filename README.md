@@ -3,12 +3,13 @@
 
 # 说明
 
-[gRPC服务发现&负载均衡](https://segmentfault.com/a/1190000008672912)中的例子, 修订如下问题
+[gRPC服务发现&负载均衡](https://segmentfault.com/a/1190000008672912)中的例子, 修订如下
 
 - register中重复PUT, watch时没有释放导致的内存泄漏
 - 退出时不能正常unregister
 - 接收到etcd的delete事件时，未删除数据[#1](https://github.com/wwcd/grpc-lb/issues/1)
 - 使用resolver包替换naming包，此包状态已变为Deprecated
+- 增加[grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway)例子
 
 # 测试
 
@@ -47,3 +48,8 @@
 
     # 启动客户端
     go run -mod vendor cmd/cli/cli.go
+
+
+    # 启动grpc-gateway代理，提供HTTP-RESTful服务
+    go run -mod vendor cmd/gw/gw.go
+    curl -X POST http://localhost:60001/hello -d '{"name": "fromGW"}'
