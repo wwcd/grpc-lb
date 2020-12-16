@@ -2,7 +2,11 @@ syntax = "proto3";
 
 package helloworld;
 
+import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.unmarshaler_all) = true;
 
 // The greeting service definition.
 service Greeter {

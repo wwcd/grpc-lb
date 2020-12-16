@@ -66,7 +66,7 @@ func (r *Resolver) watch(prefix string) {
 		for _, v := range addrDict {
 			addrList = append(addrList, v)
 		}
-		r.cc.NewAddress(addrList)
+		r.cc.UpdateState(resolver.State{Addresses: addrList})
 	}
 
 	resp, err := r.cli.Get(context.Background(), prefix, clientv3.WithPrefix())
